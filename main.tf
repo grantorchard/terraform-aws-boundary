@@ -108,6 +108,9 @@ module "rds" {
   identifier = "boundary"
   port = 5432
 
+  create_db_parameter_group = false
+  create_db_option_group = false
+
   maintenance_window = "Mon:00:00-Mon:03:00"
   backup_window      = "03:00-06:00"
   allocated_storage = 5
