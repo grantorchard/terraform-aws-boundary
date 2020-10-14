@@ -100,7 +100,7 @@ module "rds" {
 
   instance_class = "db.m3.medium"
   subnet_ids = local.private_subnets
-  vpc_security_group_ids = module.security_group_postgres.this_security_group_id
+  vpc_security_group_ids = [module.security_group_postgres.this_security_group_id]
 
   name = "boundary"
   username = "boundary"
