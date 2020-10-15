@@ -7,6 +7,7 @@ write_files:
     encoding: b64
 
 runcmd:
-  - sudo boundary database init -skip-host-resources-creation -skip-scopes-creation -skip-target-creation -config /etc/boundary.d/config.hcl || true >> /etc/boundary.d/init.log
-  - sudo systemctl enable vault
-  - sudo systemctl restart vault
+  - BOUNDARY_INIT=$(sudo boundary database init -skip-host-resources-creation -skip-scopes-creation -skip-target-creation -config /etc/boundary.d/config.hcl || true)
+  - echo $BOUNDARY_INIT | sudo tee -a /etc/boundary.d/init.log
+  - sudo systemctl enable boundary
+  - sudo systemctl restart boundary
