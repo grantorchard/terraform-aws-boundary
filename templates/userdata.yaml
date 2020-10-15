@@ -6,6 +6,7 @@ write_files:
     owner: boundary:boundary
     encoding: b64
 
-#runcmd:
-#  - sudo systemctl enable vault
-#  - sudo systemctl restart vault
+runcmd:
+  - sudo boundary database init -skip-host-resources-creation -skip-scopes-creation -skip-target-creation -config /etc/boundary.d/config.hcl || true >> /etc/boundary.d/init.log
+  - sudo systemctl enable vault
+  - sudo systemctl restart vault
