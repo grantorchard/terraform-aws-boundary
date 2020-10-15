@@ -1,0 +1,70 @@
+---
+# playbook.yaml
+- name: "Install Boundary"
+  hosts: localhost
+  gather_facts: true
+  become: true
+  vars:
+    boundary_version: 0.1
+
+  tasks:
+    - name: Add HashiCorp repo key
+      apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add HashiCorp repository
+      apt_repository:
+        repo: https://apt.releases.hashicorp.com {{ self.facts['lsb']['release'] }} main
+        state: present
+
+    - name: Upgrade installed packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    - name: Install Boundary
+      apt:
+        name: boundary
+        state: latest
+
+    - name: Install PostreSQL
+      apt:
+        name: postgresql-12
+        state: latest
+
+    - name: Create Boundary Database
+      community.general.postgresql_db:
+        name: boundary
+
+    - name: Create Boundary Group
+      group:
+        name: boundary
+        state: present
+
+    - name: Create Boundary User
+      user:
+        name: boundary
+        state: present
+        system: yes
+
+    - name: Copy Boundary systemd
+      copy:
+        src: ./boundary.service
+        dest: /etc/systemd/system/boundary.service
+        owner: boundary
+        group: boundary
+        mode: '0664'
+
+    - name: Change Boundary file permissions
+      file:
+        path: /usr/local/bin/boundary
+        owner: boundary
+        group: boundary
+
+    - name: Disable boundary Service
+      systemd:
+        name: boundary
+        enabled: no
+
+    

@@ -26,8 +26,8 @@ data aws_ami "ubuntu" {
   most_recent = true
 
   filter {
-    name = "name"
-    values = ["ubuntu/images/*ubuntu-bionic-18.04-amd64-server-*"]
+    name = "tag:application"
+    values = ["boundary-0.1"]
   }
 
   filter {
@@ -40,16 +40,16 @@ data aws_ami "ubuntu" {
     values = ["ebs"]
   }
 
-  owners = ["099720109477"] # Canonical
+  owners = ["711129375688"] # Canonical
 }
-/*
+
 module "boundary" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "2.15.0"
 
   name = "boundary"
 
-  user_data_base64 = base64gzip(data.template_file.userdata.rendered)
+  #user_data_base64 = base64gzip(data.template_file.userdata.rendered)
 
   ami = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
@@ -72,8 +72,9 @@ resource aws_route53_record "this" {
   ttl     = "300"
   records = module.boundary.public_ip
 }
-*/
 
+
+/*
 module "security_group_postgres" {
   source  = "terraform-aws-modules/security-group/aws"
 
@@ -90,6 +91,7 @@ module "security_group_postgres" {
   ]
   tags = var.tags
 }
+
 
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
@@ -117,3 +119,4 @@ module "rds" {
 
   # insert the 11 required variables here
 }
+*/
