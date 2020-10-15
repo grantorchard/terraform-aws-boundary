@@ -54,11 +54,13 @@ module "boundary" {
   ami = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   key_name = var.key_name
+  iam_instance_profile = aws_iam_instance_profile.this.name
 
   monitoring = true
   vpc_security_group_ids = [
     local.security_group_outbound,
     local.security_group_ssh,
+    module.security_group_boundary.this_security_group_id
   ]
 
   subnet_id = local.public_subnets[0]
@@ -93,6 +95,57 @@ module "security_group_boundary" {
   ]
   tags = var.tags
 }
+
+data aws_iam_policy_document "assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+data aws_iam_policy_document "this" {
+  statement {
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:DescribeKey"
+    ]
+
+    resources = ["*"]
+  }
+}
+
+
+resource aws_iam_instance_profile "this" {
+  name_prefix = var.hostname
+  path        = var.instance_profile_path
+  role        = aws_iam_role.this.name
+}
+
+resource aws_iam_role "this" {
+  name_prefix        = var.hostname
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+}
+
+resource aws_iam_role_policy "this" {
+  name   = var.hostname
+  role   = aws_iam_role.this.id
+  policy = data.aws_iam_policy_document.this.json
+}
+
+
+resource aws_kms_key "this" {
+  description             = "Boundary key"
+  deletion_window_in_days = 10
+  tags = var.tags
+}
+
+
 /*
 
 module "rds" {
