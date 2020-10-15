@@ -20,3 +20,8 @@ variable hostname {
   type = string
   default = "boundary"
 }
+
+variable instance_profile_path {
+  description = "Path in which to create the IAM instance profile."
+  default     = "/"
+}
