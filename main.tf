@@ -74,24 +74,25 @@ resource aws_route53_record "this" {
 }
 
 
-/*
-module "security_group_postgres" {
+
+module "security_group_boundary" {
   source  = "terraform-aws-modules/security-group/aws"
 
-  name        = "boundary-postgres"
-  description = "boundary postgres access"
+  name        = "boundary-boundary"
+  description = "boundary boundary access"
   vpc_id      = local.vpc_id
 
   ingress_with_cidr_blocks = [
     {
-      rule        = "postgresql-tcp"
-      description = "Boundary postgres ingress"
+      from_port   = 9200
+      to_port     = 9200
+      description = "Boundary boundary ingress"
       cidr_blocks = "0.0.0.0/0"
     }
   ]
   tags = var.tags
 }
-
+/*
 
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
