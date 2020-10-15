@@ -87,7 +87,7 @@ module "security_group_boundary" {
   ingress_with_cidr_blocks = [
     {
       from_port   = 9200
-      to_port     = 9200
+      to_port     = 9202
       protocol    = "tcp"
       description = "Boundary boundary ingress"
       cidr_blocks = "0.0.0.0/0"
