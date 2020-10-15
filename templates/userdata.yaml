@@ -1,0 +1,11 @@
+#cloud-config
+write_files:
+  - path: /etc/boundary.d/config.hcl
+    content: ${boundary_conf}
+    permissions: '0644'
+    owner: boundary:boundary
+    encoding: b64
+
+#runcmd:
+#  - sudo systemctl enable vault
+#  - sudo systemctl restart vault

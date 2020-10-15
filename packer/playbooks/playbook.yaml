@@ -1,7 +1,8 @@
 ---
 # playbook.yaml
 - name: "Install Boundary"
-  hosts: localhost
+  hosts: default
+  remote_user: ubuntu
   gather_facts: true
   become: true
   vars:
@@ -15,7 +16,7 @@
 
     - name: Add HashiCorp repository
       apt_repository:
-        repo: https://apt.releases.hashicorp.com {{ self.facts['lsb']['release'] }} main
+        repo: deb https://apt.releases.hashicorp.com bionic main
         state: present
 
     - name: Upgrade installed packages
@@ -23,19 +24,41 @@
         upgrade: dist
         update_cache: yes
 
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: latest
+
     - name: Install Boundary
       apt:
         name: boundary
         state: latest
 
-    - name: Install PostreSQL
+    - name: Install PostgreSQL
       apt:
-        name: postgresql-12
+        name: postgresql
         state: latest
+      with_items:
+        - postgresql-contrib
+
+    - name: Install psycopg2 for postgresql user creation
+      pip:
+        name: psycopg2-binary
+        executable: pip3
+
+    - name : Create Boundary user on postgres
+      become_user: postgres
+      community.general.postgresql_user:
+        name: boundary
+        password: boundary
+        role_attr_flags: SUPERUSER
+        state: present
 
     - name: Create Boundary Database
+      become_user: postgres
       community.general.postgresql_db:
         name: boundary
+        owner: boundary
 
     - name: Create Boundary Group
       group:
@@ -58,7 +81,7 @@
 
     - name: Change Boundary file permissions
       file:
-        path: /usr/local/bin/boundary
+        path: /usr/bin/boundary
         owner: boundary
         group: boundary
 
@@ -66,5 +89,3 @@
       systemd:
         name: boundary
         enabled: no
-
-    

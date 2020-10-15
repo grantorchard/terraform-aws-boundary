@@ -1,8 +1,8 @@
 [Unit]
-Description=HashiCorp Boundary
+Description=HashiCorp Boundary Worker
 
 [Service]
-ExecStart=/usr/local/bin/boundary -config /etc/boundary.d/config.hcl
+ExecStart=/usr/bin/boundary server -config /etc/boundary.d/config.hcl
 User=boundary
 Group=boundary
 LimitMEMLOCK=infinity

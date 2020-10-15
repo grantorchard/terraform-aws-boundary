@@ -2,10 +2,10 @@ build {
   sources = [
     "source.amazon-ebs.boundary"
   ]
-/*
-  provisioner "ansible-local" {
+
+  provisioner "ansible" {
     playbook_file = "./playbooks/playbook.yaml"
-  }*/
+  }
 }
 
 /*

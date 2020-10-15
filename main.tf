@@ -18,7 +18,7 @@ locals {
 }
 
 data aws_route53_zone "this" {
-  name         = "go.hashidemos.io"
+  name         = var.domain
   private_zone = false
 }
 
@@ -47,9 +47,9 @@ module "boundary" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   version = "2.15.0"
 
-  name = "boundary"
+  name = var.hostname
 
-  #user_data_base64 = base64gzip(data.template_file.userdata.rendered)
+  user_data_base64 = base64gzip(data.template_file.userdata.rendered)
 
   ami = data.aws_ami.ubuntu.id
   instance_type = var.instance_type

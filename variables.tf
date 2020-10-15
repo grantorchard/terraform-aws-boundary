@@ -25,3 +25,8 @@ variable instance_profile_path {
   description = "Path in which to create the IAM instance profile."
   default     = "/"
 }
+
+variable domain {
+  type = string
+  default = "go.hashidemos.io"
+}

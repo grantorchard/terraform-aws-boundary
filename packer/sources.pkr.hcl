@@ -1,6 +1,7 @@
 locals {}
 
 source "amazon-ebs" "boundary" {
+
   region = var.region
 
   source_ami_filter {
@@ -15,7 +16,7 @@ source "amazon-ebs" "boundary" {
 
   instance_type = "t2.medium"
   ssh_username = "ubuntu"
-  ami_name = "boundary-${var.boundary_version}"
+  ami_name = "boundary-{{timestamp}}"
 
   tags = {
     owner = var.owner
