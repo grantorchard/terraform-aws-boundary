@@ -15,3 +15,8 @@ variable key_name {
   type    = string
   default = "go"
 }
+
+variable hostname {
+  type = string
+  default = "boundary"
+}
