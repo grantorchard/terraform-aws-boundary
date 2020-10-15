@@ -139,12 +139,23 @@ resource aws_iam_role_policy "this" {
 }
 
 
-resource aws_kms_key "this" {
-  description             = "Boundary key"
+resource aws_kms_key "root" {
+  description             = "Boundary root key"
   deletion_window_in_days = 10
   tags = var.tags
 }
 
+resource aws_kms_key "worker-auth" {
+  description             = "Boundary worker-auth key"
+  deletion_window_in_days = 10
+  tags = var.tags
+}
+
+resource aws_kms_key "recovery" {
+  description             = "Boundary recovery key"
+  deletion_window_in_days = 10
+  tags = var.tags
+}
 
 /*
 
