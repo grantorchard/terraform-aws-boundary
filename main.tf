@@ -60,7 +60,7 @@ module "boundary" {
   vpc_security_group_ids = [
     local.security_group_outbound,
     local.security_group_ssh,
-    module.security_group_boundary.this_security_group_id
+    module.security_group_boundary.security_group_id
   ]
 
   subnet_id = local.public_subnets[0]
