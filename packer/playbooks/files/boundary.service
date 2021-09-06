@@ -1,5 +1,5 @@
 [Unit]
-Description=HashiCorp Boundary Worker
+Description=HashiCorp Boundary
 
 [Service]
 ExecStart=/usr/bin/boundary server -config /etc/boundary.d/config.hcl
