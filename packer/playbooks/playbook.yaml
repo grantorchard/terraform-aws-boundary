@@ -49,15 +49,6 @@
         path: /etc/boundary.d/certs
         owner: boundary
         group: boundary
-        mode: '0664'
-
-    - name: Copy Boundary systemd
-      copy:
-        src: ./boundary.service
-        dest: /etc/systemd/system/boundary.service
-        owner: boundary
-        group: boundary
-        mode: '0664'
 
     - name: Change Boundary file permissions
       file:
