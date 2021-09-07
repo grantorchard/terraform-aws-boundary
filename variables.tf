@@ -1,32 +1,79 @@
-variable tags {
-  type = map
-  default = {
-    TTL   = "48"
-    owner = "Grant Orchard"
-  }
-}
-
-variable instance_type {
+variable "instance_type" {
   type    = string
-  default = "t2.medium"
+  default = "t2.micro"
 }
 
-variable key_name {
+variable "key_name" {
   type    = string
   default = "go"
 }
 
-variable hostname {
-  type = string
+variable "lb_hostname" {
+  type    = string
   default = "boundary"
 }
 
-variable instance_profile_path {
+variable "instance_profile_path" {
   description = "Path in which to create the IAM instance profile."
   default     = "/"
 }
 
-variable domain {
-  type = string
+variable "domain" {
+  type    = string
   default = "go.hashidemos.io"
+}
+
+variable "cluster_port" {
+	type = number
+	default = 9201
+}
+
+variable "cluster_lb_port" {
+	type = number
+	default = 9201
+}
+
+variable "api_port" {
+	type = number
+	default = 9200
+}
+
+variable "api_lb_port" {
+	type = number
+	default = 443
+}
+
+variable "worker_port" {
+	type = number
+	default = 9202
+}
+
+variable "worker_lb_port" {
+	type = number
+	default = 9202
+}
+
+variable "database_username" {
+	type = string
+	default = "boundary"
+}
+
+variable "database_password" {
+	type = string
+	default = "boundary"
+}
+
+variable "database_name" {
+	type = string
+	default = "boundary"
+}
+
+variable "tls_disabled" {
+	type = bool
+	default = true
+}
+
+variable "tls_cert_path" {
+	type = string
+	default = "/etc/boundary.d/certs/"
 }
