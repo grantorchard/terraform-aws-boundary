@@ -50,7 +50,6 @@
         owner: boundary
         group: boundary
         mode: '0664'
-        recurse: yes
 
     - name: Copy Boundary systemd
       copy:
@@ -70,3 +69,8 @@
       systemd:
         name: boundary
         enabled: no
+
+    - name: Install jq
+      apt:
+        name: jq
+        state: latest
