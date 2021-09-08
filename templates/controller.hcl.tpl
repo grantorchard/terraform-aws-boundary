@@ -1,3 +1,9 @@
+#!/bin/bash
+hostname=$(hostname)
+ip_address=$(ip -j addr | jq -r '.[] | select(.ifname=="eth0") | .addr_info[] | select(.family=="inet") | .local')
+
+#Generate config file
+cat <<EOH > /etc/boundary.d/config.hcl
 disable_mlock = true
 
 telemetry {
@@ -55,3 +61,13 @@ kms "awskms" {
   purpose    = "recovery"
   kms_key_id = "${kms_recovery}"
 }
+EOH
+
+BOUNDARY_INIT=$(boundary database init -skip-auth-method-creation -skip-host-resources-creation -skip-scopes-creation -skip-target-creation -config /etc/boundary.d/config.hcl || true)
+echo $BOUNDARY_INIT | sudo tee -a /etc/boundary.d/init.log
+
+# Finish service configuration for boundary and start the service
+sudo chown -R boundary:boundary /etc/boundary.d/config.hcl
+sudo systemctl daemon-reload
+sudo systemctl enable boundary.service
+sudo systemctl start boundary.service

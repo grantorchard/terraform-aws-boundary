@@ -154,7 +154,22 @@ module "worker_asg" {
 
   image_id         = local.boundary_ami
   instance_type    = var.worker_size
-  user_data_base64 = base64gzip(data.template_file.worker_userdata.rendered)
+  user_data_base64 = base64gzip(templatefile("${path.module}/templates/worker.hcl.tpl",
+		{
+			cluster_lb_fqdn = "${var.lb_hostname}.${data.aws_route53_zone.this.name}"
+			cluster_lb_port = var.cluster_lb_port
+			worker_port     = var.worker_port
+			worker_lb_fqdn  = "${var.worker_lb_hostname}.${data.aws_route53_zone.this.name}"
+			worker_lb_port  = var.worker_lb_port
+			tls_cert_path   = var.tls_cert_path
+			kms_root        = aws_kms_key.root.id
+			kms_worker_auth = aws_kms_key.worker_auth.id
+			kms_recovery    = aws_kms_key.recovery.id
+			tls_disabled    = var.tls_disabled
+			tls_cert_path   = var.tls_cert_path
+		}
+	))
+	#base64gzip(data.template_file.worker_userdata.rendered)
   # base64gzip(templatefile("${path.module}/templates/controller.hcl.tpl",
   #     {
   #       cluster_port      = var.cluster_port
@@ -181,26 +196,3 @@ module "worker_asg" {
     aws_security_group.worker.id
   ]
 }
-
-
-# module "boundary-controller" {
-#   source  = "terraform-aws-modules/ec2-instance/aws"
-#   version = "3.1.0"
-
-#   user_data = base64gzip(data.template_file.controller_userdata.rendered)
-
-#   ami                  = local.boundary_ami
-#   instance_type        = var.instance_type
-#   key_name             = var.key_name
-#   iam_instance_profile = aws_iam_instance_profile.this.name
-
-#   monitoring = true
-#   vpc_security_group_ids = [
-#     local.security_group_outbound,
-#     local.security_group_ssh,
-#     aws_security_group.controller.id
-#   ]
-
-#   subnet_id = local.public_subnets[0]
-# }
-
