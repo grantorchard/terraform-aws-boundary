@@ -8,7 +8,7 @@ resource "aws_db_instance" "this" {
   name                = var.database_name
   username            = var.database_username
   password            = var.database_password
-  skip_final_snapshot = false
+  skip_final_snapshot = true
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.this.name
