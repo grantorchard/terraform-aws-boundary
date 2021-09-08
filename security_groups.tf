@@ -65,7 +65,7 @@ resource "aws_security_group_rule" "controller_ingress_access" {
   to_port                  = var.cluster_port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.controller.id
-	source_security_group_id = aws_security_group.worker.id
+  source_security_group_id = aws_security_group.worker.id
 }
 
 # Remote client to worker access
@@ -90,10 +90,10 @@ resource "aws_security_group_rule" "controller_rds" {
 
 # Vault access to RDS for dynamic credential management
 resource "aws_security_group_rule" "hcp_to_rds" {
-  type                     = "ingress"
-  from_port                = 5432
-  to_port                  = 5432
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.rds.id
-	cidr_blocks							 = ["172.25.16.0/20"]
+  type              = "ingress"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+  security_group_id = aws_security_group.rds.id
+  cidr_blocks       = ["172.25.16.0/20"]
 }

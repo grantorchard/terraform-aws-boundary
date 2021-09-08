@@ -4,12 +4,12 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 3.57"
     }
-		hcp = {
-			source = "hashicorp/hcp"
-			version = "~> 0.15"
-		}
-		vault = {
-      source = "hashicorp/vault"
+    hcp = {
+      source  = "hashicorp/hcp"
+      version = "~> 0.15"
+    }
+    vault = {
+      source  = "hashicorp/vault"
       version = "2.23.0"
     }
   }

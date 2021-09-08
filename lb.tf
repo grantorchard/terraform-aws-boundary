@@ -16,7 +16,7 @@ module "boundary_controller_lb" {
       protocol        = "HTTPS"
       certificate_arn = module.boundary_cert.acm_certificate_arn
     },
-		{
+    {
       port            = var.cluster_lb_port
       protocol        = "HTTPS"
       certificate_arn = module.boundary_controller_cert.acm_certificate_arn
@@ -43,7 +43,7 @@ module "boundary_controller_lb" {
       backend_port     = var.api_port
       target_type      = "instance"
     },
-		{
+    {
       name_prefix      = "cnt"
       backend_protocol = "HTTP"
       backend_port     = var.cluster_port
@@ -56,7 +56,7 @@ module "boundary_worker_lb" {
   source  = "terraform-aws-modules/alb/aws"
   version = "6.5.0"
 
-	load_balancer_type = "network"
+  load_balancer_type = "network"
 
   vpc_id  = local.vpc_id
   subnets = local.public_subnets

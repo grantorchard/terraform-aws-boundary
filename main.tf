@@ -1,102 +1,15 @@
-data terraform_remote_state "this" {
-  backend = "remote"
-
-  config = {
-    organization = "grantorchard"
-    workspaces = {
-      name = "terraform-aws-core"
-    }
-  }
-}
-
 locals {
-  public_subnets = data.terraform_remote_state.this.outputs.public_subnets
-  private_subnets = data.terraform_remote_state.this.outputs.private_subnets
+  public_subnets          = data.terraform_remote_state.this.outputs.public_subnets
+  private_subnets         = data.terraform_remote_state.this.outputs.private_subnets
   security_group_outbound = data.terraform_remote_state.this.outputs.security_group_outbound
-  security_group_ssh = data.terraform_remote_state.this.outputs.security_group_ssh
-  vpc_id = data.terraform_remote_state.this.outputs.vpc_id
+  security_group_ssh      = data.terraform_remote_state.this.outputs.security_group_ssh
+  vpc_id                  = data.terraform_remote_state.this.outputs.vpc_id
+  boundary_ami            = [for image in flatten(data.hcp_packer_image_iteration.this.builds[*].images[*]) : image.image_id if image.region == "us-west-2"][0]
+  vault_db_path           = "rds_postgres"
 }
 
-data aws_route53_zone "this" {
-  name         = var.domain
-  private_zone = false
-}
-
-data aws_ami "ubuntu" {
-  most_recent = true
-
-  filter {
-    name = "tag:application"
-    values = ["boundary-0.1"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["711129375688"] # Canonical
-}
-
-module "boundary" {
-  source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "2.15.0"
-
-  name = var.hostname
-
-  user_data_base64 = base64gzip(data.template_file.userdata.rendered)
-
-  ami = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
-  key_name = var.key_name
-  iam_instance_profile = aws_iam_instance_profile.this.name
-
-  monitoring = true
-  vpc_security_group_ids = [
-    local.security_group_outbound,
-    local.security_group_ssh,
-    module.security_group_boundary.security_group_id
-  ]
-
-  subnet_id = local.public_subnets[0]
-  tags = var.tags
-}
-
-resource aws_route53_record "this" {
-  zone_id = data.aws_route53_zone.this.id
-  name    = "${var.hostname}.${data.aws_route53_zone.this.name}"
-  type    = "A"
-  ttl     = "300"
-  records = module.boundary.public_ip
-}
-
-
-
-module "security_group_boundary" {
-  source  = "terraform-aws-modules/security-group/aws"
-
-  name        = "boundary-boundary"
-  description = "boundary boundary access"
-  vpc_id      = local.vpc_id
-
-  ingress_with_cidr_blocks = [
-    {
-      from_port   = 9200
-      to_port     = 9202
-      protocol    = "tcp"
-      description = "Boundary boundary ingress"
-      cidr_blocks = "0.0.0.0/0"
-    }
-  ]
-  tags = var.tags
-}
-
-data aws_iam_policy_document "assume" {
+# Create IAM resources for use by Controller and Worker nodes
+data "aws_iam_policy_document" "assume" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -108,7 +21,7 @@ data aws_iam_policy_document "assume" {
   }
 }
 
-data aws_iam_policy_document "this" {
+data "aws_iam_policy_document" "this" {
   statement {
     actions = [
       "kms:Encrypt",
@@ -121,68 +34,174 @@ data aws_iam_policy_document "this" {
 }
 
 
-resource aws_iam_instance_profile "this" {
-  name_prefix = var.hostname
+resource "aws_iam_instance_profile" "this" {
+  name_prefix = "boundary"
   path        = var.instance_profile_path
   role        = aws_iam_role.this.name
 }
 
-resource aws_iam_role "this" {
-  name_prefix        = var.hostname
+resource "aws_iam_role" "this" {
+  name_prefix        = "controller"
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
-resource aws_iam_role_policy "this" {
-  name   = var.hostname
+resource "aws_iam_role_policy" "this" {
   role   = aws_iam_role.this.id
   policy = data.aws_iam_policy_document.this.json
 }
 
 
-resource aws_kms_key "root" {
-  description             = "Boundary root key"
-  deletion_window_in_days = 10
-  tags = var.tags
+# Spin up compute instances from Packer image registry
+
+data "hcp_packer_image_iteration" "this" {
+  bucket_name = "boundary"
+  channel     = "latest"
 }
 
-resource aws_kms_key "worker-auth" {
-  description             = "Boundary worker-auth key"
-  deletion_window_in_days = 10
-  tags = var.tags
+module "controller_asg" {
+  source  = "terraform-aws-modules/autoscaling/aws"
+  version = "4.6.0"
+
+  name             = "boundary_controller"
+  min_size         = 1
+  max_size         = 1
+  desired_capacity = 1
+
+  health_check_type = "EC2"
+
+  vpc_zone_identifier = local.public_subnets
+
+
+  instance_refresh = {
+    strategy = "Rolling"
+    preferences = {
+      min_healthy_percentage = 50
+    }
+  }
+
+  # Launch template config
+  lt_name     = "boundary_controller"
+  description = "Launch template for Boundary controller"
+
+  use_lt    = true
+  create_lt = true
+
+  # uncomment these lines if you need ssh access for troubleshooting
+  # associate_public_ip_address = true
+  # key_name             = var.key_name
+  target_group_arns = module.boundary_controller_lb.target_group_arns
+
+  image_id         = local.boundary_ami
+  instance_type    = var.controller_size
+  user_data_base64 = base64gzip(data.template_file.controller_userdata.rendered)
+  # base64gzip(templatefile("${path.module}/templates/controller.hcl.tpl",
+  #     {
+  #       cluster_port      = var.cluster_port
+  #       cluster_lb_fqdn   = "${var.lb_hostname}.${data.aws_route53_zone.this.name}"
+  #       cluster_lb_port   = var.cluster_lb_port
+  #       api_port          = var.api_port
+  #       kms_root          = aws_kms_key.root.id
+  #       kms_worker_auth   = aws_kms_key.worker_auth.id
+  #       kms_recovery      = aws_kms_key.recovery.id
+  #       database_username = var.database_username
+  #       database_password = var.database_password
+  #       database_name     = var.database_name
+  #       database_endpoint = aws_db_instance.this.endpoint
+  # 			tls_disabled      = var.tls_disabled
+  # 			tls_cert_path     = var.tls_cert_path
+  #     }
+  # ))
+
+  iam_instance_profile_arn = aws_iam_instance_profile.this.arn
+
+  security_groups = [
+    local.security_group_outbound,
+    local.security_group_ssh,
+    aws_security_group.controller.id
+  ]
 }
 
-resource aws_kms_key "recovery" {
-  description             = "Boundary recovery key"
-  deletion_window_in_days = 10
-  tags = var.tags
+module "worker_asg" {
+  source  = "terraform-aws-modules/autoscaling/aws"
+  version = "4.6.0"
+
+  name             = "boundary_worker"
+  min_size         = 1
+  max_size         = 1
+  desired_capacity = 1
+
+  health_check_type = "EC2"
+
+  vpc_zone_identifier = local.public_subnets
+
+  instance_refresh = {
+    strategy = "Rolling"
+    preferences = {
+      min_healthy_percentage = 50
+    }
+  }
+
+  # Launch template config
+  lt_name     = "boundary_worker"
+  description = "Launch template for Boundary worker"
+
+  use_lt    = true
+  create_lt = true
+
+  # uncomment these lines if you need ssh access for troubleshooting
+  # associate_public_ip_address = true
+  # key_name             = var.key_name
+  target_group_arns = module.boundary_worker_lb.target_group_arns
+
+  image_id         = local.boundary_ami
+  instance_type    = var.worker_size
+  user_data_base64 = base64gzip(data.template_file.worker_userdata.rendered)
+  # base64gzip(templatefile("${path.module}/templates/controller.hcl.tpl",
+  #     {
+  #       cluster_port      = var.cluster_port
+  #       cluster_lb_fqdn   = "${var.lb_hostname}.${data.aws_route53_zone.this.name}"
+  #       cluster_lb_port   = var.cluster_lb_port
+  #       api_port          = var.api_port
+  #       kms_root          = aws_kms_key.root.id
+  #       kms_worker_auth   = aws_kms_key.worker_auth.id
+  #       kms_recovery      = aws_kms_key.recovery.id
+  #       database_username = var.database_username
+  #       database_password = var.database_password
+  #       database_name     = var.database_name
+  #       database_endpoint = aws_db_instance.this.endpoint
+  # 			tls_disabled      = var.tls_disabled
+  # 			tls_cert_path     = var.tls_cert_path
+  #     }
+  # ))
+
+  iam_instance_profile_arn = aws_iam_instance_profile.this.arn
+
+  security_groups = [
+    local.security_group_outbound,
+    local.security_group_ssh,
+    aws_security_group.worker.id
+  ]
 }
 
-/*
 
-module "rds" {
-  source  = "terraform-aws-modules/rds/aws"
-  version = "2.18.0"
+# module "boundary-controller" {
+#   source  = "terraform-aws-modules/ec2-instance/aws"
+#   version = "3.1.0"
 
-  engine = "postgres"
-  engine_version = "12.4"
+#   user_data = base64gzip(data.template_file.controller_userdata.rendered)
 
-  instance_class = "db.m3.medium"
-  subnet_ids = local.private_subnets
-  vpc_security_group_ids = [module.security_group_postgres.this_security_group_id]
+#   ami                  = local.boundary_ami
+#   instance_type        = var.instance_type
+#   key_name             = var.key_name
+#   iam_instance_profile = aws_iam_instance_profile.this.name
 
-  name = "boundary"
-  username = "boundary"
-  password = "Hashi123!"
-  identifier = "boundary"
-  port = 5432
+#   monitoring = true
+#   vpc_security_group_ids = [
+#     local.security_group_outbound,
+#     local.security_group_ssh,
+#     aws_security_group.controller.id
+#   ]
 
-  create_db_parameter_group = false
-  create_db_option_group = false
+#   subnet_id = local.public_subnets[0]
+# }
 
-  maintenance_window = "Mon:00:00-Mon:03:00"
-  backup_window      = "03:00-06:00"
-  allocated_storage = 5
-
-  # insert the 11 required variables here
-}
-*/
