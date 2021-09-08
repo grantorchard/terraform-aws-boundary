@@ -18,34 +18,17 @@ resource "aws_security_group" "lb" {
   name   = "boundary_api_lb"
 }
 
-# API Access
-resource "aws_security_group_rule" "api_access" {
-  type                     = "ingress"
-  from_port                = 9200
-  to_port                  = 9200
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.lb.id
-  security_group_id        = aws_security_group.controller.id
-}
-
-resource "aws_security_group_rule" "api_egress_access" {
-  type                     = "egress"
-  from_port                = 9200
-  to_port                  = 9200
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.controller.id
-  security_group_id        = aws_security_group.lb.id
-}
-
+# Boundary external access
 resource "aws_security_group_rule" "lb_https_access" {
   type              = "ingress"
-  from_port         = 443
-  to_port           = 443
+  from_port         = var.api_lb_port
+  to_port           = var.api_lb_port
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.lb.id
 }
 
+# Permit access on 80, which we redirect
 resource "aws_security_group_rule" "lb_http_redirect_access" {
   type              = "ingress"
   from_port         = 80
@@ -55,44 +38,47 @@ resource "aws_security_group_rule" "lb_http_redirect_access" {
   security_group_id = aws_security_group.lb.id
 }
 
-resource "aws_security_group_rule" "lb_access_for_me" {
-  type              = "ingress"
-  from_port         = 9200
-  to_port           = 9200
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.controller.id
-}
-
-# Controller Access from Worker
-resource "aws_security_group_rule" "controller_access" {
+# API ingress rule applied to controllers
+resource "aws_security_group_rule" "api_ingress_access" {
   type                     = "ingress"
-  from_port                = 9201
-  to_port                  = 9201
+  from_port                = var.api_port
+  to_port                  = var.api_port
   protocol                 = "tcp"
-  source_security_group_id = aws_security_group.worker.id
+  source_security_group_id = aws_security_group.lb.id
   security_group_id        = aws_security_group.controller.id
 }
 
-resource "aws_security_group_rule" "external_worker_controller_access" {
-  type              = "ingress"
-  from_port         = 9201
-  to_port           = 9201
-  protocol          = "tcp"
-  security_group_id = aws_security_group.controller.id
-  cidr_blocks       = ["27.32.248.192/32"]
+# API egress rule applied to lb, don't let the source_security_group fool you!
+resource "aws_security_group_rule" "api_lb_egress_access" {
+  type                     = "egress"
+  from_port                = var.api_port
+  to_port                  = var.api_port
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.controller.id
+  security_group_id        = aws_security_group.lb.id
 }
 
-resource "aws_security_group_rule" "worker_access" {
+# Controller Access from Worker
+resource "aws_security_group_rule" "controller_ingress_access" {
+  type                     = "ingress"
+  from_port                = var.cluster_port
+  to_port                  = var.cluster_port
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.controller.id
+	source_security_group_id = aws_security_group.worker.id
+}
+
+# Remote client to worker access
+resource "aws_security_group_rule" "worker_ingress_access" {
   type              = "ingress"
-  from_port         = 9202
-  to_port           = 9202
+  from_port         = var.worker_port
+  to_port           = var.worker_port
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.worker.id
 }
 
-### RDS Access from Controller
+# RDS Access from Controller
 resource "aws_security_group_rule" "controller_rds" {
   type                     = "ingress"
   from_port                = 5432
@@ -100,4 +86,14 @@ resource "aws_security_group_rule" "controller_rds" {
   protocol                 = "tcp"
   security_group_id        = aws_security_group.rds.id
   source_security_group_id = aws_security_group.controller.id
+}
+
+# Vault access to RDS for dynamic credential management
+resource "aws_security_group_rule" "hcp_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+	cidr_blocks							 = ["172.25.16.0/20"]
 }

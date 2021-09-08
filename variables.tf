@@ -13,6 +13,16 @@ variable "lb_hostname" {
   default = "boundary"
 }
 
+variable "worker_lb_hostname" {
+	type = string
+	default = "workers"
+}
+
+variable "controller_lb_hostname" {
+	type = string
+	default = "controllers"
+}
+
 variable "instance_profile_path" {
   description = "Path in which to create the IAM instance profile."
   default     = "/"
@@ -77,3 +87,19 @@ variable "tls_cert_path" {
 	type = string
 	default = "/etc/boundary.d/certs/"
 }
+
+variable "controller_size" {
+	type = string
+	default = "t2.micro"
+}
+
+variable "worker_size" {
+	type = string
+	default = "t2.micro"
+}
+
+variable "vault_database_connection_name" {
+	type = string
+	default = "boundary"
+}
+
