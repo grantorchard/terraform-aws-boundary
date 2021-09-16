@@ -5,3 +5,7 @@ output "recovery_kms_arn" {
 output "boundary_url" {
 	value = aws_route53_record.this.fqdn
 }
+
+output "aws_workers" {
+	value = aws_security_group.worker.id
+}
