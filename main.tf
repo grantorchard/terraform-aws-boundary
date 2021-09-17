@@ -87,8 +87,8 @@ module "controller_asg" {
   create_lt = true
 
   # uncomment these lines if you need ssh access for troubleshooting
-  # associate_public_ip_address = true
-  # key_name             = var.key_name
+  associate_public_ip_address = true
+  key_name             = var.key_name
   target_group_arns = module.boundary_controller_lb.target_group_arns
 
   image_id         = local.boundary_ami
@@ -148,8 +148,8 @@ module "worker_asg" {
   create_lt = true
 
   # uncomment these lines if you need ssh access for troubleshooting
-  # associate_public_ip_address = true
-  # key_name             = var.key_name
+  associate_public_ip_address = true
+  key_name             = var.key_name
   target_group_arns = module.boundary_worker_lb.target_group_arns
 
   image_id         = local.boundary_ami
