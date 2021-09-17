@@ -13,9 +13,9 @@ variable "worker_lb_hostname" {
   default = "workers"
 }
 
-variable "controller_lb_hostname" {
+variable "cluster_lb_hostname" {
   type    = string
-  default = "controllers"
+  default = "cluster"
 }
 
 variable "instance_profile_path" {
