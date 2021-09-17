@@ -74,7 +74,7 @@ resource "aws_security_group_rule" "controller_ingress_access" {
   to_port                  = var.cluster_port
   protocol                 = "tcp"
   security_group_id        = aws_security_group.lb.id
-  source_security_group_id = aws_security_group.worker.id
+  cidr_blocks       = ["0.0.0.0/0"]
 }
 
 # Remote client to worker access
