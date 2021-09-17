@@ -73,7 +73,7 @@ resource "aws_security_group_rule" "controller_ingress_access" {
   from_port                = var.cluster_port
   to_port                  = var.cluster_port
   protocol                 = "tcp"
-  security_group_id        = aws_security_group.controller
+  security_group_id        = aws_security_group.controller.id
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
