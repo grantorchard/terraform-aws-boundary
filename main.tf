@@ -89,7 +89,7 @@ module "controller_asg" {
   # uncomment these lines if you need ssh access for troubleshooting
   associate_public_ip_address = true
   key_name             = var.key_name
-  target_group_arns = module.boundary_controller_lb.target_group_arns
+  target_group_arns = concat(module.boundary_controller_lb.target_group_arns, module.boundary_cluster_lb.target_group_arns)
 
   image_id         = local.boundary_ami
   instance_type    = var.controller_size

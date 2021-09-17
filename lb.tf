@@ -30,12 +30,12 @@ module "boundary_controller_lb" {
         status_code = "HTTP_301"
       }
     },
-		{
-      port            = var.cluster_lb_port
-      protocol        = "HTTP"
-      #certificate_arn = module.boundary_controller_cert.acm_certificate_arn
-			target_group_index = 1
-    }
+		# {
+    #   port            = var.cluster_lb_port
+    #   protocol        = "HTTP"
+    #   #certificate_arn = module.boundary_controller_cert.acm_certificate_arn
+		# 	target_group_index = 1
+    # }
   ]
 
   target_groups = [
@@ -45,12 +45,12 @@ module "boundary_controller_lb" {
       backend_port     = var.api_port
       target_type      = "instance"
     },
-    {
-      name_prefix      = "cnt"
-      backend_protocol = "HTTP"
-      backend_port     = var.cluster_port
-      target_type      = "instance"
-    }
+    # {
+    #   name_prefix      = "cnt"
+    #   backend_protocol = "HTTP"
+    #   backend_port     = var.cluster_port
+    #   target_type      = "instance"
+    # }
   ]
 }
 
@@ -83,6 +83,34 @@ module "boundary_worker_lb" {
   ]
 }
 
+module "boundary_cluster_lb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "6.5.0"
+
+  load_balancer_type = "network"
+
+  vpc_id  = local.vpc_id
+  subnets = local.public_subnets
+
+  name = "boundary-cluster"
+
+  http_tcp_listeners = [
+    {
+      port            = var.cluster_lb_port
+      protocol        = "TCP"
+    }
+  ]
+
+  target_groups = [
+    {
+      name_prefix      = "cnt"
+      backend_protocol = "TCP"
+      backend_port     = var.cluster_port
+      target_type      = "instance"
+    }
+  ]
+}
+
 data "aws_route53_zone" "this" {
   name         = var.domain
   private_zone = false
@@ -96,12 +124,12 @@ resource "aws_route53_record" "this" {
   records = [module.boundary_controller_lb.lb_dns_name]
 }
 
-resource "aws_route53_record" "controller" {
+resource "aws_route53_record" "cluster" {
   zone_id = data.aws_route53_zone.this.id
-  name    = "${var.controller_lb_hostname}.${data.aws_route53_zone.this.name}"
+  name    = "${var.cluster_lb_hostname}.${data.aws_route53_zone.this.name}"
   type    = "CNAME"
   ttl     = "300"
-  records = [module.boundary_controller_lb.lb_dns_name]
+  records = [module.boundary_cluster_lb.lb_dns_name]
 }
 
 resource "aws_route53_record" "worker" {
