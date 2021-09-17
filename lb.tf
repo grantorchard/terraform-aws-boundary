@@ -29,13 +29,7 @@ module "boundary_controller_lb" {
         protocol    = "HTTPS"
         status_code = "HTTP_301"
       }
-    },
-		# {
-    #   port            = var.cluster_lb_port
-    #   protocol        = "HTTP"
-    #   #certificate_arn = module.boundary_controller_cert.acm_certificate_arn
-		# 	target_group_index = 1
-    # }
+    }
   ]
 
   target_groups = [
@@ -44,13 +38,7 @@ module "boundary_controller_lb" {
       backend_protocol = "HTTP"
       backend_port     = var.api_port
       target_type      = "instance"
-    },
-    # {
-    #   name_prefix      = "cnt"
-    #   backend_protocol = "HTTP"
-    #   backend_port     = var.cluster_port
-    #   target_type      = "instance"
-    # }
+    }
   ]
 }
 
@@ -65,11 +53,11 @@ module "boundary_worker_lb" {
 
   name = "boundary-worker"
 
-  https_listeners = [
+  http_tcp_listeners = [
     {
       port            = var.worker_lb_port
-      protocol        = "TLS"
-      certificate_arn = module.boundary_worker_cert.acm_certificate_arn
+      protocol        = "TCP"
+      #certificate_arn = module.boundary_worker_cert.acm_certificate_arn
     }
   ]
 
