@@ -16,12 +16,6 @@ module "boundary_controller_lb" {
       protocol        = "HTTPS"
       certificate_arn = module.boundary_cert.acm_certificate_arn
 			target_group_index = 0
-    },
-    {
-      port            = var.cluster_lb_port
-      protocol        = "HTTPS"
-      certificate_arn = module.boundary_controller_cert.acm_certificate_arn
-			target_group_index = 1
     }
   ]
 
@@ -35,6 +29,12 @@ module "boundary_controller_lb" {
         protocol    = "HTTPS"
         status_code = "HTTP_301"
       }
+    },
+		{
+      port            = var.cluster_lb_port
+      protocol        = "HTTP"
+      #certificate_arn = module.boundary_controller_cert.acm_certificate_arn
+			target_group_index = 1
     }
   ]
 
