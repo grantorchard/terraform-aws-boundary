@@ -58,14 +58,14 @@ resource "aws_security_group_rule" "api_lb_egress_access" {
   security_group_id        = aws_security_group.lb.id
 }
 
-resource "aws_security_group_rule" "cluster_lb_egress_access" {
-  type                     = "egress"
-  from_port                = var.cluster_port
-  to_port                  = var.cluster_port
-  protocol                 = "tcp"
-  source_security_group_id = aws_security_group.controller.id
-  security_group_id        = aws_security_group.lb.id
-}
+# resource "aws_security_group_rule" "cluster_lb_egress_access" {
+#   type                     = "egress"
+#   from_port                = var.cluster_port
+#   to_port                  = var.cluster_port
+#   protocol                 = "tcp"
+#   source_security_group_id = aws_security_group.controller.id
+#   security_group_id        = aws_security_group.contoller_cluster_lb.id
+# }
 
 # Controller Access from Worker
 resource "aws_security_group_rule" "controller_ingress_access" {
@@ -73,7 +73,7 @@ resource "aws_security_group_rule" "controller_ingress_access" {
   from_port                = var.cluster_port
   to_port                  = var.cluster_port
   protocol                 = "tcp"
-  security_group_id        = aws_security_group.lb.id
+  security_group_id        = aws_security_group.controller
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
