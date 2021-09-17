@@ -156,7 +156,7 @@ module "worker_asg" {
   instance_type    = var.worker_size
   user_data_base64 = base64gzip(templatefile("${path.module}/templates/worker.hcl.tpl",
 		{
-			cluster_lb_fqdn = "${var.lb_hostname}.${data.aws_route53_zone.this.name}"
+			cluster_lb_fqdn   = "${var.cluster_lb_hostname}.${data.aws_route53_zone.this.name}"
 			cluster_lb_port = var.cluster_lb_port
 			worker_port     = var.worker_port
 			worker_lb_fqdn  = "${var.worker_lb_hostname}.${data.aws_route53_zone.this.name}"
