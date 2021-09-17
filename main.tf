@@ -96,7 +96,7 @@ module "controller_asg" {
   user_data_base64 = base64gzip(templatefile("${path.module}/templates/controller.hcl.tpl",
       {
         cluster_port      = var.cluster_port
-        cluster_lb_fqdn   = "${var.lb_hostname}.${data.aws_route53_zone.this.name}"
+        cluster_lb_fqdn   = "${var.cluster_lb_hostname}.${data.aws_route53_zone.this.name}"
         cluster_lb_port   = var.cluster_lb_port
         api_port          = var.api_port
         kms_root          = aws_kms_key.root.id
