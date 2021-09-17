@@ -15,11 +15,13 @@ module "boundary_controller_lb" {
       port            = var.api_lb_port
       protocol        = "HTTPS"
       certificate_arn = module.boundary_cert.acm_certificate_arn
+			target_group_index = 0
     },
     {
       port            = var.cluster_lb_port
       protocol        = "HTTPS"
       certificate_arn = module.boundary_controller_cert.acm_certificate_arn
+			target_group_index = 1
     }
   ]
 
