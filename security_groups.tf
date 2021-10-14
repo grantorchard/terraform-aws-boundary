@@ -113,5 +113,8 @@ resource "aws_security_group_rule" "controller_to_vault" {
   to_port           = 8200
   protocol          = "tcp"
   security_group_id = aws_security_group.controller.id
-	cidr_blocks = ["172.25.16.0/20"]
+	cidr_blocks = [
+		"172.25.16.0/20",
+		"10.0.101.72/32"
+	]
 }
