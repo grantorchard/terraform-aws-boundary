@@ -6,6 +6,14 @@ locals {
   vpc_id                  = data.terraform_remote_state.this.outputs.vpc_id
   boundary_ami            = [for image in flatten(data.hcp_packer_image_iteration.this.builds[*].images[*]) : image.image_id if image.region == "us-west-2"][0]
   vault_db_path           = "rds_postgres"
+	default_tags            = {
+		owner              = var.owner
+		se-region          = var.se-region
+		purpose            = var.purpose
+		ttl                = var.ttl
+		terraform          = var.terraform
+		hc-internet-facing = var.hc-internet-facing
+	}
 }
 
 # Create IAM resources for use by Controller and Worker nodes
@@ -71,6 +79,13 @@ module "controller_asg" {
 
   vpc_zone_identifier = local.public_subnets
 
+	tags = [
+		for k,v in local.default_tags: {
+			key = k
+			value = v
+			propogate_at_launch = true
+		}
+	]
 
   instance_refresh = {
     strategy = "Rolling"
@@ -132,6 +147,14 @@ module "worker_asg" {
   health_check_type = "EC2"
 
   vpc_zone_identifier = local.public_subnets
+
+	tags = [
+		for k,v in local.default_tags: {
+			key = k
+			value = v
+			propogate_at_launch = true
+		}
+	]
 
   instance_refresh = {
     strategy = "Rolling"
