@@ -81,9 +81,9 @@ module "controller_asg" {
 
 	tags = [
 		for k,v in local.default_tags: {
-			key = k
-			value = v
-			propogate_at_launch = true
+			"key" = k
+			"value" = v
+			"propogate_at_launch" = true
 		}
 	]
 
@@ -150,9 +150,9 @@ module "worker_asg" {
 
 	tags = [
 		for k,v in local.default_tags: {
-			key = k
-			value = v
-			propogate_at_launch = true
+			"key" = k
+			"value" = v
+			"propogate_at_launch" = true
 		}
 	]
 
