@@ -4,7 +4,7 @@ data "terraform_remote_state" "this" {
   config = {
     organization = "grantorchard"
     workspaces = {
-      name = "terraform-aws-core"
+      name = "aws-core"
     }
   }
 }
