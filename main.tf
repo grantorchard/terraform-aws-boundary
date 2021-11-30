@@ -79,11 +79,11 @@ module "controller_asg" {
 
   vpc_zone_identifier = local.public_subnets
 
-	tags = [
+	tags_as_map = [
 		for k,v in local.default_tags: {
-			"key" = k
-			"value" = v
-			"propogate_at_launch" = true
+			key = k
+			value = v
+			propogate_at_launch = true
 		}
 	]
 
@@ -148,11 +148,11 @@ module "worker_asg" {
 
   vpc_zone_identifier = local.public_subnets
 
-	tags = [
+	tags_as_map = [
 		for k,v in local.default_tags: {
-			"key" = k
-			"value" = v
-			"propogate_at_launch" = true
+			key = k
+			value = v
+			propogate_at_launch = true
 		}
 	]
 
