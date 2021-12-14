@@ -79,13 +79,15 @@ module "controller_asg" {
 
   vpc_zone_identifier = local.public_subnets
 
-	tags = [
-		for k,v in local.default_tags: {
-			key = k
-			value = v
-			propogate_at_launch = true
-		}
-	]
+	tags_as_map = local.default_tags
+
+	# tags = [
+	# 	for k,v in local.default_tags: {
+	# 		key = k
+	# 		value = v
+	# 		propogate_at_launch = true
+	# 	}
+	# ]
 
   instance_refresh = {
     strategy = "Rolling"
@@ -148,13 +150,15 @@ module "worker_asg" {
 
   vpc_zone_identifier = local.public_subnets
 
-	tags = [
-		for k,v in local.default_tags: {
-			key = k
-			value = v
-			propogate_at_launch = true
-		}
-	]
+	tags_as_map = local.default_tags
+	
+	# tags = [
+	# 	for k,v in local.default_tags: {
+	# 		key = k
+	# 		value = v
+	# 		propogate_at_launch = true
+	# 	}
+	# ]
 
   instance_refresh = {
     strategy = "Rolling"
