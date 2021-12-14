@@ -24,7 +24,8 @@ resource "aws_security_group_rule" "lb_https_access" {
   from_port         = var.api_lb_port
   to_port           = var.api_lb_port
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = var.ipv4_addresses
+	ipv6_cidr_blocks  = var.ipv6_addresses
   security_group_id = aws_security_group.lb.id
 }
 
@@ -34,7 +35,8 @@ resource "aws_security_group_rule" "lb_http_redirect_access" {
   from_port         = 80
   to_port           = 80
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = var.ipv4_addresses
+	ipv6_cidr_blocks  = var.ipv6_addresses
   security_group_id = aws_security_group.lb.id
 }
 
@@ -83,7 +85,8 @@ resource "aws_security_group_rule" "worker_ingress_access" {
   from_port         = var.worker_port
   to_port           = var.worker_port
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = var.ipv4_addresses
+	ipv6_cidr_blocks  = var.ipv6_addresses
   security_group_id = aws_security_group.worker.id
 }
 
@@ -107,14 +110,14 @@ resource "aws_security_group_rule" "hcp_to_rds" {
   cidr_blocks       = ["172.25.16.0/20"]
 }
 
-resource "aws_security_group_rule" "controller_to_vault" {
-  type              = "egress"
-  from_port         = 8200
-  to_port           = 8200
-  protocol          = "tcp"
-  security_group_id = aws_security_group.controller.id
-	cidr_blocks = [
-		"172.25.16.0/20",
-		"10.0.101.71/32"
-	]
-}
+# resource "aws_security_group_rule" "controller_to_vault" {
+#   type              = "egress"
+#   from_port         = 8200
+#   to_port           = 8200
+#   protocol          = "tcp"
+#   security_group_id = aws_security_group.controller.id
+# 	cidr_blocks = [
+# 		"172.25.16.0/20",
+# 		"10.0.101.71/32"
+# 	]
+# }

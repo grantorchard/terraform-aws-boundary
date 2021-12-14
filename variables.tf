@@ -122,3 +122,11 @@ variable "terraform" {
 variable "hc-internet-facing" {
 	type = bool
 }
+
+variable "ipv4_addresses" {
+	type = list(string)
+}
+
+variable "ipv6_addresses" {
+	type = list(string)
+}
