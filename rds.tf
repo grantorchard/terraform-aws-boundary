@@ -4,7 +4,7 @@ resource "aws_db_instance" "this" {
   storage_type        = "gp2"
   engine              = "postgres"
   engine_version      = "11.12"
-  instance_class      = "db.m6g.16xlarge"
+  instance_class      = "db.t2.micro"
   name                = var.database_name
   username            = var.database_username
   password            = var.database_password
